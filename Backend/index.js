@@ -25,6 +25,7 @@ const pool = mysql.createPool({
 //Login
 app.get("/login/:username/:password", (req, res) => {
   let { username, password } = req.params;
+  
   pool.getConnection((err, connection) => {
     if (err) throw err;
     if (typeof username != "string" || typeof password != "string") {
@@ -32,8 +33,8 @@ app.get("/login/:username/:password", (req, res) => {
       return;
     }
     connection.query(
-      "SELECT * FROM User WHERE username = ? AND password = ?",
-      [username, password],
+      "SELECT * FROM user WHERE username=? AND password=?",
+      [username,password],
       (err, rows) => {
         connection.release();
         if (!err) {
@@ -41,7 +42,7 @@ app.get("/login/:username/:password", (req, res) => {
             const token = generateAccessToken({ username: username });
             res.json(token);
           } else {
-            res.send("err");
+            res.sendStatus(403);
           }
         } else {
           res.send(err);
@@ -52,8 +53,12 @@ app.get("/login/:username/:password", (req, res) => {
 });
 
 //register
-app.post("/register", (req, res) => {
+app.put("/register", (req, res) => {
     let { username, password } = req.body;
+    if (typeof username != "string" || typeof password != "string") {
+      res.send("Invalid parameters!");
+      return;
+    }
     pool.getConnection((err, connection) => {
       if (err) throw err;
       connection.query(
@@ -62,7 +67,8 @@ app.post("/register", (req, res) => {
         (err, rows) => {
           connection.release();
           if (!err) {
-            res.send(rows);
+            const token = generateAccessToken({username:username});
+            res.json(token);
           } else {
             res.send(rows);
           }
@@ -71,8 +77,41 @@ app.post("/register", (req, res) => {
     });
   });
 
+  //public endpoint
+  app.get("/table/user",authenticateToken,(req, res) => {
+    let { table} = req.params;
+    pool.getConnection((err, connection) => {
+      if (err) throw err;
+      connection.query(
+        "SELECT * from user",
+        [table],
+        (err, rows) => {
+          connection.release();
+          if (!err) {
+            res.send(rows);
+          } else {
+            res.send(err);
+          }
+        }
+      );
+    });
+  });
+
 app.listen(port, () => console.log("listen on port:" + port));
+
+
 
 function generateAccessToken(username) {
     return jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: '1800s' });
 }
+
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization']
+    const token = authHeader.replace("token=","");
+    if (token == null) return res.sendStatus(401)
+    jwt.verify(token, process.env.TOKEN_SECRET, (err, user) => {
+      if (err) return res.sendStatus(403)
+      req.user = user
+      next()
+    })
+  }
