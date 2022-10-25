@@ -78,12 +78,12 @@ app.put("/register", (req, res) => {
   });
 
   //public endpoint
-  app.get("/table/user",authenticateToken,(req, res) => {
+  app.get("/table/user",(req, res) => {
     let { table} = req.params;
     pool.getConnection((err, connection) => {
       if (err) throw err;
       connection.query(
-        "SELECT * from user",
+        "SELECT id,username from user",
         [table],
         (err, rows) => {
           connection.release();
@@ -106,7 +106,7 @@ function generateAccessToken(username) {
 }
 
 function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization']
+    const authHeader = req.headers['Authorization']
     const token = authHeader.replace("token=","");
     if (token == null) return res.sendStatus(401)
     jwt.verify(token, process.env.TOKEN_SECRET, (err, user) => {
