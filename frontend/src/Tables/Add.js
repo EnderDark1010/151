@@ -1,6 +1,5 @@
 import axios from "axios";
 import React, { useState } from "react";
-import { sanitizeXSS } from "../Functions/Sanitize";
 import { useAuth0 } from "@auth0/auth0-react";
 
 export function Add(props) {
@@ -67,7 +66,7 @@ export function Add(props) {
   );
 
   function changeTable(evt) {
-    const val = sanitizeXSS(evt.target.value);
+    const val = evt.target.value;
     setSelectedTable(val);
     setInputData([]);
     setTable("");
@@ -122,7 +121,6 @@ export function Add(props) {
       //raw image
       copyInputData[index] = e.target.files;
     } else {
-      e.target.value = sanitizeXSS(e.target.value);
       copyInputData[index] = e.target.value;
     }
     setInputData(copyInputData);

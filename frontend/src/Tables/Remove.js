@@ -1,6 +1,5 @@
 import axios from "axios";
 import React, { useState } from "react";
-import { sanitizeXSS } from "../Functions/Sanitize";
 import { useAuth0 } from "@auth0/auth0-react";
 export function Remove(props) {
   const { getAccessTokenSilently } = useAuth0();
@@ -57,7 +56,7 @@ export function Remove(props) {
   );
 
   function changeTable(evt) {
-    const val = sanitizeXSS(evt.target.value);
+    const val = evt.target.value;
     setSelectedTable(val);
   }
 

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { sanitizeXSS } from "../Functions/Sanitize";
 import { useAuth0 } from "@auth0/auth0-react";
 export function View(props) {
   const { getAccessTokenSilently } = useAuth0();
@@ -22,6 +21,8 @@ export function View(props) {
     ["director", ["id", "firstName", "lastName", "movies_directed"]],
     ["actor", ["id", "firstName", "lastName", "movies_played_in_list"]],
     ["image", ["id", "image"]],
+    ["actor_movie",["id","Actor_name","Movie"]],
+    ["movie_genre",["id","Movie","Genre"]]
   ]);
   const [selectedTable, setSelectedTable] = useState(viewableTables.keys());
   const [table, setTable] = useState();
@@ -53,7 +54,7 @@ export function View(props) {
   );
 
   function changeTable(evt) {
-    const val = sanitizeXSS(evt.target.value);
+    const val = evt.target.value;
     setSelectedTable(val);
   }
 

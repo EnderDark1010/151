@@ -15,7 +15,7 @@ export function TablePage(props) {
       <select id="mode" name="mode" onChange={(e) => changeMode(e, setMode)}>
         <option value="view">view</option>
         <option value="add">add</option>
-        <option value="edt">edt</option>
+        <option value="edit">edit</option>
         <option value="remove">remove</option>
       </select>
 

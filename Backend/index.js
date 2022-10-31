@@ -11,6 +11,7 @@ const {
   isAdmin,
 } = require("./functions/HTTPVerification");
 const { getMimeTypeFromDataURI } = require("./functions/Blob");
+const { sanitizeXSS } = require("./functions/Sanitize");
 
 const port = process.env.PORT || 5000;
 app.use(cors());
@@ -33,6 +34,7 @@ app.post("/movie", verifyToken, (req, res) => {
     sendIsNotAdminError(res);
     return;
   }
+  name = sanitizeXSS(name);
   if (
     !(typeof name == "string") ||
     !(typeof image_id == "number") ||
@@ -110,6 +112,60 @@ GROUP BY movie.name`,
     );
   });
 });
+app.get("/movie/:id", verifyToken, (req, res) => {
+  let id = req.params.id;
+  pool.getConnection((err, connection) => {
+    if (err) throw err;
+    connection.query(
+      `SELECT * FROM movie
+WHERE movie.id=?`,
+      [id],
+      (err, rows) => {
+        connection.release();
+        if (!err) {
+          res.send(rows);
+        } else {
+          res.send(err);
+        }
+      }
+    );
+  });
+});
+app.put("/movie", verifyToken, (req, res) => {
+  let { id, adminPassword, name, image_id, director_id, fsk } = req.body;
+  if (!isAdmin(adminPassword)) {
+    sendIsNotAdminError(res);
+    return;
+  }
+  name = sanitizeXSS(name);
+  if (
+    !(typeof id == "number") ||
+    !(typeof name == "string") ||
+    !(typeof image_id == "number") ||
+    !(typeof director_id == "number") ||
+    !(typeof fsk == "number")
+  ) {
+    sendInvalidParamError(res);
+    return;
+  }
+  pool.getConnection((err, connection) => {
+    if (err) throw err;
+    connection.query(
+      `UPDATE movie
+      name=?, image_id=?, director_id=?, fsk_id=?
+      WHERE id=?`,
+      [name, image_id, director_id, fsk, id],
+      (err, rows) => {
+        connection.release();
+        if (!err) {
+          res.send(rows);
+        } else {
+          res.send(err);
+        }
+      }
+    );
+  });
+});
 
 //genre
 app.post("/genre", verifyToken, (req, res) => {
@@ -120,6 +176,7 @@ app.post("/genre", verifyToken, (req, res) => {
     sendIsNotAdminError(res);
     return;
   }
+  name = sanitizeXSS(name);
   if (!(typeof name == "string")) {
     sendInvalidParamError(res);
     return;
@@ -181,6 +238,57 @@ GROUP BY genre.id`,
     );
   });
 });
+app.get("/genre/:id", verifyToken, (req, res) => {
+  let id = req.params.id;
+  pool.getConnection((err, connection) => {
+    if (err) throw err;
+    connection.query(
+      `SELECT * FROM genre
+WHERE genre.id=?`,
+      [id],
+      (err, rows) => {
+        connection.release();
+        if (!err) {
+          res.send(rows);
+        } else {
+          res.send(err);
+        }
+      }
+    );
+  });
+});
+app.put("/genre", verifyToken, (req, res) => {
+  let {adminPassword, id, name } = req.body;
+  if (!isAdmin(adminPassword)) {
+    sendIsNotAdminError(res);
+    return;
+  }
+  name = sanitizeXSS(name);
+  if (
+    !(typeof id == "number") ||
+    !(typeof name == "string")
+  ) {
+    sendInvalidParamError(res);
+    return;
+  }
+  pool.getConnection((err, connection) => {
+    if (err) throw err;
+    connection.query(
+      `UPDATE genre
+      name=?,
+      WHERE id=?`,
+      [name, id],
+      (err, rows) => {
+        connection.release();
+        if (!err) {
+          res.send(rows);
+        } else {
+          res.send(err);
+        }
+      }
+    );
+  });
+});
 
 //director
 app.post("/director", verifyToken, (req, res) => {
@@ -189,8 +297,8 @@ app.post("/director", verifyToken, (req, res) => {
     sendIsNotAdminError(res);
     return;
   }
-  console.log(firstName);
-  console.log(lastName);
+  firstName = sanitizeXSS(firstName);
+  lastName = sanitizeXSS(lastName);
   if (!(typeof firstName == "string") || !(typeof lastName == "string")) {
     sendInvalidParamError(res);
     return;
@@ -251,6 +359,59 @@ GROUP BY director.id`,
     );
   });
 });
+app.get("/director/:id", verifyToken, (req, res) => {
+  let id = req.params.id;
+  pool.getConnection((err, connection) => {
+    if (err) throw err;
+    connection.query(
+      `SELECT * FROM director
+WHERE director.id=?`,
+      [id],
+      (err, rows) => {
+        connection.release();
+        if (!err) {
+          res.send(rows);
+        } else {
+          res.send(err);
+        }
+      }
+    );
+  });
+});
+app.put("/director", verifyToken, (req, res) => {
+  let {adminPassword, id, firstName,lastName } = req.body;
+  if (!isAdmin(adminPassword)) {
+    sendIsNotAdminError(res);
+    return;
+  }
+  firstName = sanitizeXSS(firstName);
+  lastName= sanitizeXSS(lastName);
+  if (
+    !(typeof id == "number") ||
+    !(typeof firstName == "string") ||
+    !(typeof lastName == "string")
+  ) {
+    sendInvalidParamError(res);
+    return;
+  }
+  pool.getConnection((err, connection) => {
+    if (err) throw err;
+    connection.query(
+      `UPDATE director
+      firstname=?,lastname=?
+      WHERE id=?`,
+      [firstName,lastName, id],
+      (err, rows) => {
+        connection.release();
+        if (!err) {
+          res.send(rows);
+        } else {
+          res.send(err);
+        }
+      }
+    );
+  });
+});
 
 //actor
 app.post("/actor", verifyToken, (req, res) => {
@@ -259,8 +420,8 @@ app.post("/actor", verifyToken, (req, res) => {
     sendIsNotAdminError(res);
     return;
   }
-  console.log(firstName);
-  console.log(lastName);
+  firstName = sanitizeXSS(firstName);
+  lastName = sanitizeXSS(lastName);
   if (!(typeof firstName == "string") || !(typeof lastName == "string")) {
     sendInvalidParamError(res);
     return;
@@ -322,11 +483,62 @@ GROUP BY actor.id`,
     );
   });
 });
+app.get("/actor/:id", verifyToken, (req, res) => {
+  let id = req.params.id;
+  pool.getConnection((err, connection) => {
+    if (err) throw err;
+    connection.query(
+      `SELECT * FROM actor
+WHERE actor.id=?`,
+      [id],
+      (err, rows) => {
+        connection.release();
+        if (!err) {
+          res.send(rows);
+        } else {
+          res.send(err);
+        }
+      }
+    );
+  });
+});
+app.put("/actor", verifyToken, (req, res) => {
+  let {adminPassword, id, firstName,lastName } = req.body;
+  if (!isAdmin(adminPassword)) {
+    sendIsNotAdminError(res);
+    return;
+  }
+  firstName = sanitizeXSS(firstName);
+  lastName= sanitizeXSS(lastName);
+  if (
+    !(typeof id == "number") ||
+    !(typeof firstName == "string") ||
+    !(typeof lastName == "string")
+  ) {
+    sendInvalidParamError(res);
+    return;
+  }
+  pool.getConnection((err, connection) => {
+    if (err) throw err;
+    connection.query(
+      `UPDATE actor
+      firstname=?,lastname=?
+      WHERE id=?`,
+      [firstName,lastName, id],
+      (err, rows) => {
+        connection.release();
+        if (!err) {
+          res.send(rows);
+        } else {
+          res.send(err);
+        }
+      }
+    );
+  });
+});
 
 //image
 app.post("/image", verifyToken, (req, res) => {
-  console.log("img");
-
   let { adminPassword, img } = req.body;
   if (!isAdmin(adminPassword)) {
     sendIsNotAdminError(res);
@@ -394,6 +606,57 @@ app.get("/image", verifyToken, (req, res) => {
     );
   });
 });
+app.get("/image/:id", verifyToken, (req, res) => {
+  let id = req.params.id;
+  pool.getConnection((err, connection) => {
+    if (err) throw err;
+    connection.query(
+      `SELECT image.id,"img" FROM image
+WHERE image.id=?`,
+      [id],
+      (err, rows) => {
+        connection.release();
+        if (!err) {
+          res.send(rows);
+        } else {
+          res.send(err);
+        }
+      }
+    );
+  });
+});
+app.put("/image", verifyToken, (req, res) => {
+  let { adminPassword, img,id } = req.body;
+  if (!isAdmin(adminPassword)) {
+    sendIsNotAdminError(res);
+    return;
+  }
+  if (!(typeof img == "string")) {
+    sendInvalidParamError(res);
+    return;
+  }
+
+  let mime = getMimeTypeFromDataURI(img);
+  let imgWithoutMime = img.replace(mime, "");
+  pool.getConnection((err, connection) => {
+    if (err) throw err;
+    connection.query(
+      `UPDATE image 
+      img=From_BASE64(?),prefix=?
+      WHERE id=?`,
+      [imgWithoutMime, mime,id],
+      (err, rows) => {
+        connection.release();
+        if (!err) {
+          res.send(rows);
+        } else {
+          console.log(err);
+          res.send(err);
+        }
+      }
+    );
+  });
+});
 
 //actor_movie
 app.post("/actor_movie", verifyToken, (req, res) => {
@@ -452,9 +715,9 @@ app.get("/actor_movie", verifyToken, (req, res) => {
   pool.getConnection((err, connection) => {
     if (err) throw err;
     connection.query(
-      `SELECT actor_movie.id concat(actor.firstname," ",actor.lastname) as "Actor", movie.name as "Movie Name" FROM actor_movie 
-JOIN actor ON actor_movie.actor_id=actor.id
-JOIN movie on actor_movie.movie_id=movie.id`,
+      `SELECT actor_movie.id ,concat(actor.firstname," ",actor.lastname) as "Actor", movie.name as "Movie Name" FROM actor_movie 
+      JOIN actor ON actor_movie.actor_id=actor.id
+      JOIN movie on actor_movie.movie_id=movie.id`,
       (err, rows) => {
         connection.release();
         if (!err) {
@@ -524,9 +787,9 @@ app.get("/movie_genre", verifyToken, (req, res) => {
   pool.getConnection((err, connection) => {
     if (err) throw err;
     connection.query(
-      `SELECT movie_genres.id, movie_genres.name, genre.name FROM movie_genres 
-JOIN genre ON movie_genres.genre_id=genre.id
-JOIN movie on movie_genres.movie_id=movie.id`,
+      `SELECT movie_genres.id, movie.name as MovieName, genre.name FROM movie_genres 
+      JOIN genre ON movie_genres.genre_id=genre.id
+      JOIN movie ON movie_genres.movie_id=movie.id`,
       (err, rows) => {
         connection.release();
         if (!err) {
@@ -540,14 +803,3 @@ JOIN movie on movie_genres.movie_id=movie.id`,
 });
 
 app.listen(port, () => console.log("listen on port:" + port));
-
-/*
-SELECT
-    movie.name,
-    GROUP_CONCAT(DISTINCT actor.firstname SEPARATOR ',') AS Actors
-FROM
-    movie
-     JOIN actor_movie ON actor_movie.movie_id = movie.id
-     JOIN actor ON actor.id=actor_movie.actor_id
-GROUP BY movie.name
-*/
