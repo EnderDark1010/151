@@ -45,6 +45,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: gray;
 }
 
 code {
@@ -79,4 +80,8 @@ tr:last-of-type {
 
 td,th{
   padding: 12px 15px;
+}
+
+img{
+  max-width: 200px;
 }

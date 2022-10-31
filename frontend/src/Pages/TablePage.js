@@ -12,7 +12,7 @@ export function TablePage(props) {
   return (
     <>
       <label for="mode">Selected Mode:</label>
-      <select id="mode" name="mode" onChange={(e)=>changeMode(e,setMode)}>
+      <select id="mode" name="mode" onChange={(e) => changeMode(e, setMode)}>
         <option value="view">view</option>
         <option value="add">add</option>
         <option value="edt">edt</option>
@@ -23,9 +23,8 @@ export function TablePage(props) {
     </>
   );
 }
-function changeMode(event,setMode){
-    console.log(event.target.value);
-setMode(event.target.value);
+function changeMode(event, setMode) {
+  setMode(event.target.value);
 }
 
 function getElement(mode) {

@@ -1,16 +1,33 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { sanitizeXSS } from "../Functions/Sanitize";
+import { useAuth0 } from "@auth0/auth0-react";
 export function View(props) {
- const viewableTables =new Map([
-  ["",[""]],
-  ["user",["id","username"]],
- ])
+  const { getAccessTokenSilently } = useAuth0();
+  const viewableTables = new Map([
+    ["", [""]],
+    [
+      "movie",
+      [
+        "id",
+        "name",
+        "image",
+        "director name",
+        "fsk/image",
+        "genre_list",
+        "actor list",
+      ],
+    ],
+    ["genre", ["id", "name", "movie_list_that_has_genre"]],
+    ["director", ["id", "firstName", "lastName", "movies_directed"]],
+    ["actor", ["id", "firstName", "lastName", "movies_played_in_list"]],
+    ["image", ["id", "image"]],
+  ]);
   const [selectedTable, setSelectedTable] = useState(viewableTables.keys());
-  const [table,setTable]=useState();
+  const [table, setTable] = useState();
   let options = [];
 
-  viewableTables.forEach((values,key,map) => {
+  viewableTables.forEach((values, key, map) => {
     options.push(<option value={key}>{key}</option>);
   });
 
@@ -37,14 +54,19 @@ export function View(props) {
 
   function changeTable(evt) {
     const val = sanitizeXSS(evt.target.value);
-    console.log(val);
     setSelectedTable(val);
-    console.log(selectedTable);
   }
 
   async function generateTable() {
     let row = [];
-    axios.get("//localhost:5000/table/user").then(function (data) {
+    axios({
+      method: "get",
+      url: "//localhost:5000/" + selectedTable,
+      headers: {
+        Authorization: `Bearer ${await getAccessTokenSilently()}`,
+      },
+    }).then(function (data) {
+      console.log(data);
       data.data.forEach((element) => {
         let dataRow = [];
         Object.values(element).forEach((value) => {
@@ -53,20 +75,36 @@ export function View(props) {
         row.push(dataRow);
       });
       let builtTable;
-      builtTable = <table><tr>
-        {viewableTables.get(selectedTable).map(element=>
-          <th>{element}</th>
-        )}</tr>
-        {row.map(entry=>{
-          return <tr>
-            {entry.map(data=>{
-              return<td>{data}</td>
-            })}
+      builtTable = (
+        <table>
+          <tr>
+            {viewableTables.get(selectedTable).map((element) => (
+              <th>{element}</th>
+            ))}
           </tr>
-        })}
-      </table>;
-setTable(builtTable);
-
+          {row.map((entry) => {
+            return (
+              <tr>
+                {entry.map((data, index) => {
+                  if (
+                    viewableTables.get(selectedTable)[index].includes("image")
+                  ) {
+                    //data needs to be the prefix+base64 encoded image
+                    return (
+                      <td>
+                        <img src={data} />
+                      </td>
+                    );
+                  } else {
+                    return <td>{data}</td>;
+                  }
+                })}
+              </tr>
+            );
+          })}
+        </table>
+      );
+      setTable(builtTable);
     });
   }
 }

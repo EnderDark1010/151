@@ -3,21 +3,22 @@ import axios from "axios";
 import { sanitizeXSS } from "../../Functions/Sanitize";
 import { Logout } from "../../OtherElements/Logout";
 export function View(props) {
- const viewableTables =new Map([
-  ["",[""]],
-  ["user",["id","username"]],
- ])
+  const viewableTables = new Map([
+    ["", [""]],
+    ["user", ["id", "username"]],
+  ]);
   const [selectedTable, setSelectedTable] = useState(viewableTables.keys());
-  const [table,setTable]=useState();
+  const [table, setTable] = useState();
   let options = [];
 
-  viewableTables.forEach((values,key,map) => {
+  viewableTables.forEach((values, key, map) => {
     options.push(<option value={key}>{key}</option>);
   });
 
   let optionSelect = (
     <div>
-      //delete {selectedTable}<br/>
+      //delete {selectedTable}
+      <br />
       <label for="table">Table:</label>
       <select
         name="table"
@@ -39,9 +40,7 @@ export function View(props) {
 
   function changeTable(evt) {
     const val = sanitizeXSS(evt.target.value);
-    console.log(val);
     setSelectedTable(val);
-    console.log(selectedTable);
   }
 
   async function generateTable() {
@@ -55,20 +54,25 @@ export function View(props) {
         row.push(dataRow);
       });
       let builtTable;
-      builtTable = <table><tr>
-        {viewableTables.get(selectedTable).map(element=>
-          <th>{element}</th>
-        )}</tr>
-        {row.map(entry=>{
-          return <tr>
-            {entry.map(data=>{
-              return<td>{data}</td>
-            })}
+      builtTable = (
+        <table>
+          <tr>
+            {viewableTables.get(selectedTable).map((element) => (
+              <th>{element}</th>
+            ))}
           </tr>
-        })}
-      </table>;
-setTable(builtTable);
-
+          {row.map((entry) => {
+            return (
+              <tr>
+                {entry.map((data) => {
+                  return <td>{data}</td>;
+                })}
+              </tr>
+            );
+          })}
+        </table>
+      );
+      setTable(builtTable);
     });
   }
 }

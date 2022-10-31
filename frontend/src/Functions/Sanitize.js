@@ -3,14 +3,21 @@
 
 export function sanitizeXSS(stringToSanitize) {
   const lt = /</g;
-  const  gt = />/g;
-  const  ap = /'/g;
+  const gt = />/g;
+  const ap = /'/g;
   const ic = /"/g;
 
-  return stringToSanitize
-    .toString()
-    .replace(lt, "&lt;")
-    .replace(gt, "&gt;")
-    .replace(ap, "&#39;")
-    .replace(ic, "&#34;");
+  if (
+    typeof stringToSanitize === "string" ||
+    stringToSanitize instanceof String
+  ) {
+    return stringToSanitize
+      .toString()
+      .replace(lt, "&lt;")
+      .replace(gt, "&gt;")
+      .replace(ap, "&#39;")
+      .replace(ic, "&#34;");
+  } else {
+    return stringToSanitize;
+  }
 }
