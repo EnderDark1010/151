@@ -1,6 +1,6 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import LoginButton from "./Auth0/LoginButton";
-import { TablePage } from "./Pages/TablePage";
+import { PageProvider } from "./PageProvider";
 
 function App() {
   const { isAuthenticated, isLoading } = useAuth0();
@@ -10,7 +10,7 @@ function App() {
   } else if (isLoading) {
     return "The website is loading";
   } else {
-    return <TablePage />;
+    return <PageProvider />;
   }
 }
 

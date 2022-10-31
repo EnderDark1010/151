@@ -87,9 +87,9 @@ app.get("/movie", verifyToken, (req, res) => {
     if (err) throw err;
     connection.query(
       `SELECT
-    movie.id, movie.name, CONCAT(image.prefix,TO_BASE64(image.img)), CONCAT(director.firstname," ",director.lastname), CONCAT(fskImg.prefix, TO_BASE64(fskImg.img)) ,
-    GROUP_CONCAT(DISTINCT CONCAT(actor.firstname," ",actor.lastname) SEPARATOR ', ') AS Actors,
-    GROUP_CONCAT(DISTINCT genre.name SEPARATOR ',') AS Genres
+    movie.id, movie.name, CONCAT(image.prefix,TO_BASE64(image.img)) AS img, CONCAT(director.firstname," ",director.lastname) AS director, CONCAT(fskImg.prefix, TO_BASE64(fskImg.img) ) AS fsk,
+    GROUP_CONCAT(DISTINCT CONCAT(actor.firstname," ",actor.lastname) SEPARATOR ', ') AS actors,
+    GROUP_CONCAT(DISTINCT genre.name SEPARATOR ', ') AS genres
 FROM
     movie
     left JOIN actor_movie ON actor_movie.movie_id = movie.id
@@ -151,9 +151,7 @@ app.put("/movie", verifyToken, (req, res) => {
   pool.getConnection((err, connection) => {
     if (err) throw err;
     connection.query(
-      `UPDATE movie
-      name=?, image_id=?, director_id=?, fsk_id=?
-      WHERE id=?`,
+      `UPDATE movie SET name=?, image_id=?, director_id=?, fsk_id=? WHERE id=?`,
       [name, image_id, director_id, fsk, id],
       (err, rows) => {
         connection.release();
@@ -258,25 +256,20 @@ WHERE genre.id=?`,
   });
 });
 app.put("/genre", verifyToken, (req, res) => {
-  let {adminPassword, id, name } = req.body;
+  let { adminPassword, id, name } = req.body;
   if (!isAdmin(adminPassword)) {
     sendIsNotAdminError(res);
     return;
   }
   name = sanitizeXSS(name);
-  if (
-    !(typeof id == "number") ||
-    !(typeof name == "string")
-  ) {
+  if (!(typeof id == "number") || !(typeof name == "string")) {
     sendInvalidParamError(res);
     return;
   }
   pool.getConnection((err, connection) => {
     if (err) throw err;
     connection.query(
-      `UPDATE genre
-      name=?,
-      WHERE id=?`,
+      `UPDATE genre SET name=?,WHERE id=?`,
       [name, id],
       (err, rows) => {
         connection.release();
@@ -379,13 +372,13 @@ WHERE director.id=?`,
   });
 });
 app.put("/director", verifyToken, (req, res) => {
-  let {adminPassword, id, firstName,lastName } = req.body;
+  let { adminPassword, id, firstName, lastName } = req.body;
   if (!isAdmin(adminPassword)) {
     sendIsNotAdminError(res);
     return;
   }
   firstName = sanitizeXSS(firstName);
-  lastName= sanitizeXSS(lastName);
+  lastName = sanitizeXSS(lastName);
   if (
     !(typeof id == "number") ||
     !(typeof firstName == "string") ||
@@ -397,10 +390,8 @@ app.put("/director", verifyToken, (req, res) => {
   pool.getConnection((err, connection) => {
     if (err) throw err;
     connection.query(
-      `UPDATE director
-      firstname=?,lastname=?
-      WHERE id=?`,
-      [firstName,lastName, id],
+      `UPDATE director SET firstname=?,lastname=? WHERE id=?`,
+      [firstName, lastName, id],
       (err, rows) => {
         connection.release();
         if (!err) {
@@ -503,13 +494,13 @@ WHERE actor.id=?`,
   });
 });
 app.put("/actor", verifyToken, (req, res) => {
-  let {adminPassword, id, firstName,lastName } = req.body;
+  let { adminPassword, id, firstName, lastName } = req.body;
   if (!isAdmin(adminPassword)) {
     sendIsNotAdminError(res);
     return;
   }
   firstName = sanitizeXSS(firstName);
-  lastName= sanitizeXSS(lastName);
+  lastName = sanitizeXSS(lastName);
   if (
     !(typeof id == "number") ||
     !(typeof firstName == "string") ||
@@ -521,10 +512,8 @@ app.put("/actor", verifyToken, (req, res) => {
   pool.getConnection((err, connection) => {
     if (err) throw err;
     connection.query(
-      `UPDATE actor
-      firstname=?,lastname=?
-      WHERE id=?`,
-      [firstName,lastName, id],
+      `UPDATE actor SET firstname=?,lastname=? WHERE id=?`,
+      [firstName, lastName, id],
       (err, rows) => {
         connection.release();
         if (!err) {
@@ -626,7 +615,7 @@ WHERE image.id=?`,
   });
 });
 app.put("/image", verifyToken, (req, res) => {
-  let { adminPassword, img,id } = req.body;
+  let { adminPassword, img, id } = req.body;
   if (!isAdmin(adminPassword)) {
     sendIsNotAdminError(res);
     return;
@@ -641,10 +630,8 @@ app.put("/image", verifyToken, (req, res) => {
   pool.getConnection((err, connection) => {
     if (err) throw err;
     connection.query(
-      `UPDATE image 
-      img=From_BASE64(?),prefix=?
-      WHERE id=?`,
-      [imgWithoutMime, mime,id],
+      `UPDATE image SET img=From_BASE64(?),prefix=? WHERE id=?`,
+      [imgWithoutMime, mime, id],
       (err, rows) => {
         connection.release();
         if (!err) {
@@ -790,6 +777,23 @@ app.get("/movie_genre", verifyToken, (req, res) => {
       `SELECT movie_genres.id, movie.name as MovieName, genre.name FROM movie_genres 
       JOIN genre ON movie_genres.genre_id=genre.id
       JOIN movie ON movie_genres.movie_id=movie.id`,
+      (err, rows) => {
+        connection.release();
+        if (!err) {
+          res.send(rows);
+        } else {
+          res.send(err);
+        }
+      }
+    );
+  });
+});
+
+app.post("/err", verifyToken, (req, res) => {
+  pool.getConnection((err, connection) => {
+    if (err) throw err;
+    connection.query(
+      `INSERT INTO movie_genres (genre_id,movie_id,merge_key) VALUES (123012,1230123,gen_merge_key(123012,123012))`,
       (err, rows) => {
         connection.release();
         if (!err) {

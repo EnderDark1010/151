@@ -1,11 +1,28 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { sanitizeXSS } from "../../Functions/Sanitize";
-import { Logout } from "../../OtherElements/Logout";
+import { useAuth0 } from "@auth0/auth0-react";
 export function View(props) {
+  const { getAccessTokenSilently } = useAuth0();
   const viewableTables = new Map([
     ["", [""]],
-    ["user", ["id", "username"]],
+    [
+      "movie",
+      [
+        "id",
+        "name",
+        "image",
+        "director name",
+        "fsk/image",
+        "genre_list",
+        "actor list",
+      ],
+    ],
+    ["genre", ["id", "name", "movie_list_that_has_genre"]],
+    ["director", ["id", "firstName", "lastName", "movies_directed"]],
+    ["actor", ["id", "firstName", "lastName", "movies_played_in_list"]],
+    ["image", ["id", "image"]],
+    ["actor_movie",["id","Actor_name","Movie"]],
+    ["movie_genre",["id","Movie","Genre"]]
   ]);
   const [selectedTable, setSelectedTable] = useState(viewableTables.keys());
   const [table, setTable] = useState();
@@ -17,8 +34,6 @@ export function View(props) {
 
   let optionSelect = (
     <div>
-      //delete {selectedTable}
-      <br />
       <label for="table">Table:</label>
       <select
         name="table"
@@ -39,13 +54,20 @@ export function View(props) {
   );
 
   function changeTable(evt) {
-    const val = sanitizeXSS(evt.target.value);
+    const val = evt.target.value;
     setSelectedTable(val);
   }
 
   async function generateTable() {
     let row = [];
-    axios.get("//localhost:5000/table/user").then(function (data) {
+    axios({
+      method: "get",
+      url: "//localhost:5000/" + selectedTable,
+      headers: {
+        Authorization: `Bearer ${await getAccessTokenSilently()}`,
+      },
+    }).then(function (data) {
+      console.log(data);
       data.data.forEach((element) => {
         let dataRow = [];
         Object.values(element).forEach((value) => {
@@ -64,8 +86,19 @@ export function View(props) {
           {row.map((entry) => {
             return (
               <tr>
-                {entry.map((data) => {
-                  return <td>{data}</td>;
+                {entry.map((data, index) => {
+                  if (
+                    viewableTables.get(selectedTable)[index].includes("image")
+                  ) {
+                    //data needs to be the prefix+base64 encoded image
+                    return (
+                      <td>
+                        <img src={data} />
+                      </td>
+                    );
+                  } else {
+                    return <td>{data}</td>;
+                  }
                 })}
               </tr>
             );

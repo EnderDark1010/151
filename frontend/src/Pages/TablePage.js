@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { withAuthenticationRequired } from "@auth0/auth0-react";
-import { Edit } from "../Tables/Edit";
-import { Add } from "../Tables/Add";
-import { Remove } from "../Tables/Remove";
-import { View } from "../Tables/View";
+import { Edit } from "./Tables/Edit";
+import { Add } from "./Tables/Add";
+import { Remove } from "./Tables/Remove";
+import { View } from "./Tables/View";
 export function TablePage(props) {
   const [selectedMode, setMode] = useState("view");
 

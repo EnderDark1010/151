@@ -85,3 +85,32 @@ td,th{
 img{
   max-width: 200px;
 }
+
+.log-green {
+  background-color: rgb(62, 117, 66);
+  color: black;
+}
+
+.log-red {
+  background-color: rgb(170, 49, 49);
+  color: rgb(29, 12, 12);
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-gap: 2rem;
+  flex: 4.5;
+  height: 65vh;
+  overflow-y: scroll;
+}
+
+.movie_poster{
+  width: 100%;
+}
+.fsk{
+  width: 7%;
+  position: relative;
+  right:30%;
+  opacity: 50%;
+}
