@@ -8,7 +8,6 @@ export function MovieDashBoard(props) {
   const [movies, setmovies] = useState([]);
   useEffect(() => {
     const getmovies = async function () {
-      const baseURL = "http://hp-api.herokuapp.com/api/movies";
       const response = await axios({
         method: "get",
         url: "http://localhost:5000/movie",
@@ -17,7 +16,6 @@ export function MovieDashBoard(props) {
         },
       });
       let movieArr = [];
-      console.log(response);
       response.data.forEach((element, index) => {
         movieArr[index] = [
           element.name,
@@ -33,7 +31,6 @@ export function MovieDashBoard(props) {
     };
     getmovies();
   }, []);
-  console.log(movies);
   return (
     <div className="gallery">
       {movies.map((movie, index) => (

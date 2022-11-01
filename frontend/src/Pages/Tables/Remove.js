@@ -4,7 +4,6 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { Log } from "../../OtherElements/Log";
 export function Remove(props) {
   const { getAccessTokenSilently } = useAuth0();
-  const [adminPassword, setAdminPassword] = useState();
   const [deleteId, setDeleteId] = useState();
   const [log, setLog] = useState("");
   const viewableTables = [
@@ -48,12 +47,6 @@ export function Remove(props) {
         value={deleteId}
         onChange={(e) => setDeleteId(e.target.value)}
       />
-      <input
-        type={"text"}
-        placeholder={"admin password"}
-        value={adminPassword}
-        onChange={(e) => setAdminPassword(e.target.value)}
-      />
       <button onClick={startRequest}>Remove</button>
     </div>
   );
@@ -67,7 +60,7 @@ export function Remove(props) {
     await axios({
       method: "delete",
       url: "http://localhost:5000/" + selectedTable,
-      data: { adminPassword: adminPassword, id: parseInt(deleteId) },
+      data: { id: parseInt(deleteId) },
       headers: {
         Authorization: `Bearer ${await getAccessTokenSilently()}`,
       },
@@ -76,7 +69,6 @@ export function Remove(props) {
         setLog(data);
       })
       .catch((error) => {
-        console.log(error.toJSON().message);
         setLog(error.toJSON());
       });
   }

@@ -67,7 +67,6 @@ export function View(props) {
         Authorization: `Bearer ${await getAccessTokenSilently()}`,
       },
     }).then(function (data) {
-      console.log(data);
       data.data.forEach((element) => {
         let dataRow = [];
         Object.values(element).forEach((value) => {

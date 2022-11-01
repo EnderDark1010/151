@@ -5,7 +5,6 @@ import { Log } from "../../OtherElements/Log";
 
 export function Add(props) {
   const { getAccessTokenSilently } = useAuth0();
-  const [adminPassword, setAdminPassword] = useState();
   const [log, setLog] = useState("");
   const viewableTables = new Map([
     ["", [""]],
@@ -58,12 +57,6 @@ export function Add(props) {
       {optionSelect}
       <button onClick={(evt) => generateTable()}>Load input field</button>
       {inputTable}
-      <input
-        type={"text"}
-        placeholder={"admin password"}
-        value={adminPassword}
-        onChange={(e) => setAdminPassword(e.target.value)}
-      />
       <button onClick={startRequest}>Add</button>
     </div>
   );
@@ -142,7 +135,6 @@ export function Add(props) {
         setLog(data);
       })
       .catch((error) => {
-        console.log(error.toJSON().message);
         setLog(error.toJSON());
       });
   }
@@ -150,11 +142,10 @@ export function Add(props) {
   function startRequest() {
     switch (selectedTable) {
       case "genre":
-        postRequest({ adminPassword: adminPassword, name: inputData[0] });
+        postRequest({ name: inputData[0] });
         return;
       case "movie":
         postRequest({
-          adminPassword: adminPassword,
           name: inputData[0],
           image_id: parseInt(inputData[1]),
           director_id: parseInt(inputData[2]),
@@ -163,14 +154,12 @@ export function Add(props) {
         return;
       case "director":
         postRequest({
-          adminPassword: adminPassword,
           firstName: inputData[0],
           lastName: inputData[1],
         });
         return;
       case "actor":
         postRequest({
-          adminPassword: adminPassword,
           firstName: inputData[0],
           lastName: inputData[1],
         });
@@ -180,20 +169,18 @@ export function Add(props) {
         reader.readAsDataURL(inputData[0][0]);
 
         reader.onload = function () {
-          postRequest({ adminPassword: adminPassword, img: reader.result });
+          postRequest({ img: reader.result });
           return;
         };
         return;
       case "actor_movie":
         postRequest({
-          adminPassword: adminPassword,
           actor_id: parseInt(inputData[0]),
           movie_id: parseInt(inputData[1]),
         });
         return;
       case "movie_genre":
         postRequest({
-          adminPassword: adminPassword,
           movie_id: parseInt(inputData[0]),
           genre_id: parseInt(inputData[1]),
         });

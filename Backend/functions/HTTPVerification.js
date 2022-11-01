@@ -1,41 +1,70 @@
-function isAdmin(adminPassword) {
-  console.log(adminPassword);
-  return adminPassword === "1234";
-}
+const jwt =require("jsonwebtoken")
 
-function sendIsNotAdminError(res) {
-  res.status(401).json({ message: "You are not an Admin" });
-}
+
+
 
 function sendInvalidParamError(res) {
   res.status(401).json({ message: "Invalid Paramters" });
 }
 
 function verifyToken(req, res, next) {
-  //Auth header value = > send token into header
-
   const bearerHeader = req.headers["authorization"];
-  //check if bearer is undefined
   if (typeof bearerHeader !== "undefined") {
-    //split the space at the bearer
     const bearer = bearerHeader.split(" ");
-    //Get token from string
     const bearerToken = bearer[1];
-
-    //set the token
-    req.token = bearerToken;
-
-    //next middleweare
     next();
   } else {
-    //Fobidden
     res.sendStatus(403);
+    return;
   }
 }
 
+function verifyAdminRole(req, res, next) {
+  const mysql = require("mysql");
+  const pool = mysql.createPool({
+    connectionLimit: 50,
+    timeout: 5000,
+    host: "localhost",
+    user: "master",
+    password: "master",
+    database: "151",
+  });
+
+  const bearerHeader = req.headers["authorization"];
+  if (typeof bearerHeader == "undefined") {
+    res.sendStatus(403);
+    return;
+  }
+  const bearer = bearerHeader.split(" ");
+  const bearerToken = bearer[1];
+  req.token = bearerToken;
+  let decodedToken =jwt.decode(req.token);
+  pool.getConnection((err, connection) => {
+    if (err) throw err;
+    connection.query("INSERT IGNORE INTO user (id) VALUES(?)",[decodedToken.sub],(err, rows) => {
+      if (!err) {
+        connection.query("SELECT * FROM `user` WHERE `id`=?",[decodedToken.sub],(err, rows) => {
+          if(rows[0].admin!==1){
+            res.sendStatus(403);
+            return;
+          }
+        });
+      }else{
+        res.sendStatus(403);
+        return;
+      }
+      
+    });
+    
+  });
+
+  next();
+}
+
 module.exports = {
-  isAdmin,
+  
   verifyToken,
   sendInvalidParamError,
-  sendIsNotAdminError,
+
+  verifyAdminRole
 };

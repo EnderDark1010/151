@@ -3,12 +3,14 @@ const bodyParser = require("body-parser");
 const mysql = require("mysql");
 const cors = require("cors");
 const app = express();
-const dotenv = require("dotenv");
+const jwt = require("jsonwebtoken");
+
 const {
   verifyToken,
   sendIsNotAdminError,
   sendInvalidParamError,
   isAdmin,
+  verifyAdminRole,
 } = require("./functions/HTTPVerification");
 const { getMimeTypeFromDataURI } = require("./functions/Blob");
 const { sanitizeXSS } = require("./functions/Sanitize");
@@ -28,12 +30,9 @@ const pool = mysql.createPool({
 });
 
 //movie
-app.post("/movie", verifyToken, (req, res) => {
-  let { adminPassword, name, image_id, director_id, fsk } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.post("/movie", verifyToken, verifyAdminRole, (req, res) => {
+  let { name, image_id, director_id, fsk } = req.body;
+
   name = sanitizeXSS(name);
   if (
     !(typeof name == "string") ||
@@ -60,12 +59,8 @@ app.post("/movie", verifyToken, (req, res) => {
     );
   });
 });
-app.delete("/movie", verifyToken, (req, res) => {
-  let { adminPassword, id } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.delete("/movie", verifyToken, verifyAdminRole, (req, res) => {
+  let { id } = req.body;
   if (!(typeof id == "number")) {
     sendInvalidParamError(res);
     return;
@@ -131,12 +126,8 @@ WHERE movie.id=?`,
     );
   });
 });
-app.put("/movie", verifyToken, (req, res) => {
-  let { id, adminPassword, name, image_id, director_id, fsk } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.put("/movie", verifyToken, verifyAdminRole, (req, res) => {
+  let { id, name, image_id, director_id, fsk } = req.body;
   name = sanitizeXSS(name);
   if (
     !(typeof id == "number") ||
@@ -166,14 +157,10 @@ app.put("/movie", verifyToken, (req, res) => {
 });
 
 //genre
-app.post("/genre", verifyToken, (req, res) => {
-  let { adminPassword, name } = req.body;
+app.post("/genre", verifyToken, verifyAdminRole, (req, res) => {
+  let { name } = req.body;
   console.log(req.body);
 
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
   name = sanitizeXSS(name);
   if (!(typeof name == "string")) {
     sendInvalidParamError(res);
@@ -195,12 +182,9 @@ app.post("/genre", verifyToken, (req, res) => {
     );
   });
 });
-app.delete("/genre", verifyToken, (req, res) => {
-  let { adminPassword, id } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.delete("/genre", verifyToken, verifyAdminRole, (req, res) => {
+  let { id } = req.body;
+
   if (!(typeof id == "number")) {
     sendInvalidParamError(res);
     return;
@@ -255,12 +239,8 @@ WHERE genre.id=?`,
     );
   });
 });
-app.put("/genre", verifyToken, (req, res) => {
-  let { adminPassword, id, name } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.put("/genre", verifyToken, verifyAdminRole, (req, res) => {
+  let { id, name } = req.body;
   name = sanitizeXSS(name);
   if (!(typeof id == "number") || !(typeof name == "string")) {
     sendInvalidParamError(res);
@@ -269,7 +249,7 @@ app.put("/genre", verifyToken, (req, res) => {
   pool.getConnection((err, connection) => {
     if (err) throw err;
     connection.query(
-      `UPDATE genre SET name=?,WHERE id=?`,
+      `UPDATE genre SET name=? WHERE id=?`,
       [name, id],
       (err, rows) => {
         connection.release();
@@ -284,12 +264,9 @@ app.put("/genre", verifyToken, (req, res) => {
 });
 
 //director
-app.post("/director", verifyToken, (req, res) => {
-  let { adminPassword, firstName, lastName } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.post("/director", verifyToken, verifyAdminRole, (req, res) => {
+  let { firstName, lastName } = req.body;
+
   firstName = sanitizeXSS(firstName);
   lastName = sanitizeXSS(lastName);
   if (!(typeof firstName == "string") || !(typeof lastName == "string")) {
@@ -312,12 +289,8 @@ app.post("/director", verifyToken, (req, res) => {
     );
   });
 });
-app.delete("/director", verifyToken, (req, res) => {
-  let { adminPassword, id } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.delete("/director", verifyToken, verifyAdminRole, (req, res) => {
+  let { id } = req.body;
   if (!(typeof id == "number")) {
     sendInvalidParamError(res);
     return;
@@ -371,12 +344,9 @@ WHERE director.id=?`,
     );
   });
 });
-app.put("/director", verifyToken, (req, res) => {
-  let { adminPassword, id, firstName, lastName } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.put("/director", verifyToken, verifyAdminRole, (req, res) => {
+  let { id, firstName, lastName } = req.body;
+
   firstName = sanitizeXSS(firstName);
   lastName = sanitizeXSS(lastName);
   if (
@@ -405,12 +375,9 @@ app.put("/director", verifyToken, (req, res) => {
 });
 
 //actor
-app.post("/actor", verifyToken, (req, res) => {
-  let { adminPassword, firstName, lastName } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.post("/actor", verifyToken, verifyAdminRole, (req, res) => {
+  let { firstName, lastName } = req.body;
+
   firstName = sanitizeXSS(firstName);
   lastName = sanitizeXSS(lastName);
   if (!(typeof firstName == "string") || !(typeof lastName == "string")) {
@@ -433,12 +400,8 @@ app.post("/actor", verifyToken, (req, res) => {
     );
   });
 });
-app.delete("/actor", verifyToken, (req, res) => {
-  let { adminPassword, id } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.delete("/actor", verifyToken, verifyAdminRole, (req, res) => {
+  let { id } = req.body;
   if (!(typeof id == "number")) {
     sendInvalidParamError(res);
     return;
@@ -493,12 +456,9 @@ WHERE actor.id=?`,
     );
   });
 });
-app.put("/actor", verifyToken, (req, res) => {
-  let { adminPassword, id, firstName, lastName } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.put("/actor", verifyToken, verifyAdminRole, (req, res) => {
+  let { id, firstName, lastName } = req.body;
+
   firstName = sanitizeXSS(firstName);
   lastName = sanitizeXSS(lastName);
   if (
@@ -527,12 +487,9 @@ app.put("/actor", verifyToken, (req, res) => {
 });
 
 //image
-app.post("/image", verifyToken, (req, res) => {
-  let { adminPassword, img } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.post("/image", verifyToken, verifyAdminRole, (req, res) => {
+  let { img } = req.body;
+
   if (!(typeof img == "string")) {
     sendInvalidParamError(res);
     return;
@@ -557,12 +514,9 @@ app.post("/image", verifyToken, (req, res) => {
     );
   });
 });
-app.delete("/image", verifyToken, (req, res) => {
-  let { adminPassword, id } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.delete("/image", verifyToken, verifyAdminRole, (req, res) => {
+  let { id } = req.body;
+
   if (!(typeof id == "number")) {
     sendInvalidParamError(res);
     return;
@@ -614,12 +568,9 @@ WHERE image.id=?`,
     );
   });
 });
-app.put("/image", verifyToken, (req, res) => {
-  let { adminPassword, img, id } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.put("/image", verifyToken, verifyAdminRole, (req, res) => {
+  let { img, id } = req.body;
+
   if (!(typeof img == "string")) {
     sendInvalidParamError(res);
     return;
@@ -646,12 +597,9 @@ app.put("/image", verifyToken, (req, res) => {
 });
 
 //actor_movie
-app.post("/actor_movie", verifyToken, (req, res) => {
-  let { adminPassword, actor_id, movie_id } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.post("/actor_movie", verifyToken, verifyAdminRole, (req, res) => {
+  let { actor_id, movie_id } = req.body;
+
   if (!(typeof actor_id == "number") || !(typeof movie_id == "number")) {
     sendInvalidParamError(res);
     return;
@@ -672,12 +620,9 @@ app.post("/actor_movie", verifyToken, (req, res) => {
     );
   });
 });
-app.delete("/actor_movie", verifyToken, (req, res) => {
-  let { adminPassword, id } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.delete("/actor_movie", verifyToken, verifyAdminRole, (req, res) => {
+  let { id } = req.body;
+
   if (!(typeof id == "number")) {
     sendInvalidParamError(res);
     return;
@@ -718,12 +663,9 @@ app.get("/actor_movie", verifyToken, (req, res) => {
 });
 
 //movie_genre
-app.post("/movie_genre", verifyToken, (req, res) => {
-  let { adminPassword, genre_id, movie_id } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.post("/movie_genre", verifyToken, verifyAdminRole, (req, res) => {
+  let { genre_id, movie_id } = req.body;
+
   if (!(typeof genre_id == "number") || !(typeof movie_id == "number")) {
     sendInvalidParamError(res);
     return;
@@ -744,12 +686,9 @@ app.post("/movie_genre", verifyToken, (req, res) => {
     );
   });
 });
-app.delete("/movie_genre", verifyToken, (req, res) => {
-  let { adminPassword, id } = req.body;
-  if (!isAdmin(adminPassword)) {
-    sendIsNotAdminError(res);
-    return;
-  }
+app.delete("/movie_genre", verifyToken, verifyAdminRole, (req, res) => {
+  let { id } = req.body;
+
   if (!(typeof id == "number")) {
     sendInvalidParamError(res);
     return;
@@ -789,11 +728,21 @@ app.get("/movie_genre", verifyToken, (req, res) => {
   });
 });
 
-app.post("/err", verifyToken, (req, res) => {
+app.get("/permissions", verifyToken, (req, res) => {
+  const bearerHeader = req.headers["authorization"];
+  if (typeof bearerHeader == "undefined") {
+    res.sendStatus(403);
+  }
+  const bearer = bearerHeader.split(" ");
+  const bearerToken = bearer[1];
+  req.token = bearerToken;
+  let decodedToken = jwt.decode(req.token);
+
   pool.getConnection((err, connection) => {
     if (err) throw err;
     connection.query(
-      `INSERT INTO movie_genres (genre_id,movie_id,merge_key) VALUES (123012,1230123,gen_merge_key(123012,123012))`,
+      "SELECT * FROM `user` WHERE `id`=?",
+      [decodedToken.sub],
       (err, rows) => {
         connection.release();
         if (!err) {

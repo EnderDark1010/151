@@ -5,10 +5,10 @@ import { Log } from "../../OtherElements/Log";
 export function Edit(props) {
   const { getAccessTokenSilently } = useAuth0();
   const [editId, setEditId] = useState();
-  const [adminPassword, setAdminPassword] = useState();
   const [editData, setEditData] = useState([]);
   const [table, setTable] = useState();
   const [log, setLog] = useState("");
+  const [files,setFiles]=useState();
   const viewableTables = new Map([
     ["", [""]],
     ["movie", ["id", "name", "image_id", "director_id", "fsk/Min_Age"]],
@@ -60,12 +60,6 @@ export function Edit(props) {
       <button onClick={loadData}>Load data</button>
 
       <button onClick={edit}>Edit</button>
-      <input
-        type={"text"}
-        placeholder={"admin password"}
-        value={adminPassword}
-        onChange={(e) => setAdminPassword(e.target.value)}
-      />
       <br />
       {table}
     </div>
@@ -91,7 +85,6 @@ export function Edit(props) {
           })}
         </tr>
         {tableDataTypes.map((data, index) => {
-          console.log(data);
           if (data == "file") {
             return (
               <td>
@@ -100,8 +93,8 @@ export function Edit(props) {
                   accept={
                     "image/png,image/jpg,image/jpeg, image/gif, image/webp "
                   }
-                  onChange={(e) => changeValue(e, data, index)}
-                  value={editData[index] + ""}
+                  onChange={(e) => setFiles(e.target.files)}
+                  value={files}
                 ></input>
               </td>
             );
@@ -142,9 +135,9 @@ export function Edit(props) {
         Authorization: `Bearer ${await getAccessTokenSilently()}`,
       },
     });
+    console.log(gottenData);
 
     Object.values(gottenData.data[0]).map((val, index) => {
-      console.log(val);
       editData[index] = val;
     });
     loadTable();
@@ -154,14 +147,12 @@ export function Edit(props) {
     switch (selectedTable) {
       case "genre":
         putRequest({
-          adminPassword: adminPassword,
           id: parseInt(editId),
-          name: editData[0],
+          name: editData[1],
         });
         return;
       case "movie":
         putRequest({
-          adminPassword: adminPassword,
           id: parseInt(editId),
           name: editData[1],
           image_id: parseInt(editData[2]),
@@ -171,27 +162,24 @@ export function Edit(props) {
         return;
       case "director":
         putRequest({
-          adminPassword: adminPassword,
           id: parseInt(editId),
-          firstName: editData[0],
-          lastName: editData[1],
+          firstName: editData[1],
+          lastName: editData[2],
         });
         return;
       case "actor":
         putRequest({
-          adminPassword: adminPassword,
           id: parseInt(editId),
-          firstName: editData[0],
-          lastName: editData[1],
+          firstName: editData[1],
+          lastName: editData[2],
         });
         return;
       case "image":
         const reader = new FileReader();
-        reader.readAsDataURL(editData[0][0]);
+        reader.readAsDataURL(files[0]);
 
         reader.onload = function () {
           putRequest({
-            adminPassword: adminPassword,
             id: parseInt(editId),
             img: reader.result,
           });
@@ -214,7 +202,6 @@ export function Edit(props) {
         setLog(data);
       })
       .catch((error) => {
-        console.log(error.toJSON().message);
         setLog(error.toJSON());
       });
   }
